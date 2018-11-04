@@ -7,17 +7,14 @@
 //
 
 import UIKit
-protocol isAbleToReceiveData : class {
-    func pass(data: String)  //data: string is an example parameter
-}
 
 class PopOverVC: UIViewController {
     @IBOutlet weak var tableView: UITableView!
     
     var titleData = [String]()
     var imageData = [String]()
-    var setAscending:String?
-    var delegate:isAbleToReceiveData?
+   
+    
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -37,6 +34,7 @@ class PopOverVC: UIViewController {
     }
 
 }
+//MARK:TableViewDataSource
 
 extension PopOverVC: UITableViewDelegate,UITableViewDataSource{
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -65,10 +63,9 @@ extension PopOverVC: UITableViewDelegate,UITableViewDataSource{
             sortArray.sort { (first, second) -> Bool in
                 return first > second
             }
-            setAscending = "Ascendings"
+            
             print(sortArray)
-            UserDefaults.standard.set(sortArray, forKey: "sortArray")
-            delegate?.pass(data: setAscending!)
+           
             dismiss(animated: true, completion: nil)
         }else{
             sortArray.sort { (first, second) -> Bool in
@@ -80,6 +77,7 @@ extension PopOverVC: UITableViewDelegate,UITableViewDataSource{
         }
     }
 }
+//MARK:UITableViewCell
 
 class PopOverList: UITableViewCell {
    

@@ -15,34 +15,21 @@ class ViewController: UIViewController,UISearchControllerDelegate, UISearchBarDe
     var searchActive : Bool = false
     let searchController = UISearchController(searchResultsController: nil)
     
-
-    
-   
-   
-    
     var movieList = [String]()
     var movieBannar = [String]()
     var movieOverView = [String]()
     var movieRating = [String]()
     var movieReleaseDate = [String]()
     var movieOriginalTitle = [String]()
-//    var filteredData = [String]()
-    
+
     
     @IBOutlet weak var btnsetting: UIBarButtonItem!
-    
     @IBOutlet weak var collectionView: UICollectionView!
     
-    @IBOutlet weak var searchBar: UISearchBar!
-    
-   
-    var data1 = [String]()
-    var filteredData = [String]()
-    var inSearchMode = false
-    
+  
     override func viewDidLoad() {
         super.viewDidLoad()
-        filtered = movieList
+       
         self.searchController.searchResultsUpdater = self
         self.searchController.delegate = self
         self.searchController.searchBar.delegate = self
@@ -52,23 +39,16 @@ class ViewController: UIViewController,UISearchControllerDelegate, UISearchBarDe
         self.searchController.obscuresBackgroundDuringPresentation = false
         searchController.searchBar.placeholder = "Search for Movie"
         searchController.searchBar.sizeToFit()
-        
-        
+    
         searchController.searchBar.becomeFirstResponder()
-        
-        
+    
         self.navigationItem.titleView = searchController.searchBar
         
         getServiceCall()
-        
     
-       
-        
     }
     
-    
-    
-    
+//#Mark: Service call
     
     func getServiceCall() {
         
@@ -89,8 +69,6 @@ class ViewController: UIViewController,UISearchControllerDelegate, UISearchBarDe
                 let originalTitle = resultlist["original_title"].stringValue
                 
                 self.movieList.insert(title, at: dataIterator)
-                
-               
                 self.movieBannar.insert(posterPath, at: dataIterator)
                 self.movieOverView.insert(overView, at: dataIterator)
                 self.movieRating.insert(rating, at: dataIterator)
@@ -100,14 +78,9 @@ class ViewController: UIViewController,UISearchControllerDelegate, UISearchBarDe
                 dataIterator = dataIterator + 1
                
             }
-            print(self.movieRating)
-            let defaults = UserDefaults.standard
-            defaults.set(self.movieRating, forKey: "storeRatings")
-            
-            
+      
             self.collectionView.reloadData()
-       
-            
+      
         }) { (error) in
             print(error)
         }
@@ -117,6 +90,8 @@ class ViewController: UIViewController,UISearchControllerDelegate, UISearchBarDe
       
         performSegue(withIdentifier: "reusable", sender: self)
     }
+    
+    //MARK: PopoverDelegate
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?)
     {
@@ -136,6 +111,8 @@ class ViewController: UIViewController,UISearchControllerDelegate, UISearchBarDe
         return .none
     }
     
+    //MARK : SearchbarDelegate
+    
     func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
         searchActive = false
         self.dismiss(animated: true, completion: nil)
@@ -143,21 +120,14 @@ class ViewController: UIViewController,UISearchControllerDelegate, UISearchBarDe
     
     func updateSearchResults(for searchController: UISearchController)
     {
-        if let searchText = searchController.searchBar.text, !searchText.isEmpty {
-            filtered = movieList.filter { team in
-                return team.lowercased().contains(searchText.lowercased())
-            }
-            
-        } else {
-            filtered = movieList
-        }
-//        let searchString = searchController.searchBar.text
-//
-//        filtered = movieList.filter({ (item) -> Bool in
-//            let countryText: NSString = item as NSString
-//
-//            return (countryText.range(of: searchString!, options: NSString.CompareOptions.caseInsensitive).location) != NSNotFound
-//        })
+        
+        let searchString = searchController.searchBar.text
+
+        filtered = movieList.filter({ (item) -> Bool in
+            let countryText: NSString = item as NSString
+
+            return (countryText.range(of: searchString!, options: NSString.CompareOptions.caseInsensitive).location) != NSNotFound
+        })
         
         collectionView.reloadData()
         
@@ -185,9 +155,7 @@ class ViewController: UIViewController,UISearchControllerDelegate, UISearchBarDe
     
     }
 
-
-
-
+//MARK:tableViewDataSource
 extension ViewController:UICollectionViewDelegate,UICollectionViewDataSource,UICollectionViewDelegateFlowLayout{
     
 
@@ -215,18 +183,6 @@ extension ViewController:UICollectionViewDelegate,UICollectionViewDataSource,UIC
        }
     
     
-    func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
-        if (kind == UICollectionElementKindSectionHeader) {
-            let headerView =  collectionView.dequeueReusableSupplementaryView(ofKind: UICollectionElementKindSectionHeader, withReuseIdentifier: "reusable", for: indexPath) as! SearchBarReusableView
-            
-            headerView.searchBar.delegate = self
-        
-            return headerView
-        }
-        
-        return UICollectionReusableView()
-    }
-    
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         return CGSize(width: (view.frame.size.width-35)/2 , height:180)
@@ -253,6 +209,7 @@ extension ViewController:UICollectionViewDelegate,UICollectionViewDataSource,UIC
    
     
 }
+//MARK:UICollectionCell
 
 class Movielist: UICollectionViewCell {
  
@@ -266,9 +223,5 @@ class Movielist: UICollectionViewCell {
     
 }
 
-class SearchBarReusableView: UICollectionReusableView {
-    
-    @IBOutlet weak var btnSettings: UIButton!
-    @IBOutlet weak var searchBar: UISearchBar!
-}
+
 

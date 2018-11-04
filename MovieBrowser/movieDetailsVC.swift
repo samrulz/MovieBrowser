@@ -22,15 +22,12 @@ class movieDetailsVC: UIViewController {
     var getOriginalTitle:String?
     var getRating:String?
     var getImage:String?
-    
-
-    
+  
     override func viewDidLoad() {
         super.viewDidLoad()
         
         title = "Movie Details"
-        
-     
+    
         posterView.sd_setImage(with: URL(string: getImage!  ), placeholderImage: UIImage(named: "placeholder.png"))
         overViewText.text = getOverview!
         lblTitleWithDate.text = "\(getOriginalTitle!) | \(getReleaseDate!)"
