@@ -9,7 +9,14 @@
 import UIKit
 import SDWebImage
 
-class ViewController: UIViewController,UISearchBarDelegate,UIPopoverPresentationControllerDelegate {
+class ViewController: UIViewController,UISearchControllerDelegate, UISearchBarDelegate, UISearchResultsUpdating,UIPopoverPresentationControllerDelegate {
+    
+    var filtered:[String] = []
+    var searchActive : Bool = false
+    let searchController = UISearchController(searchResultsController: nil)
+    
+
+    
    
    
     
@@ -19,19 +26,49 @@ class ViewController: UIViewController,UISearchBarDelegate,UIPopoverPresentation
     var movieRating = [String]()
     var movieReleaseDate = [String]()
     var movieOriginalTitle = [String]()
-    var filteredData = [String]()
+//    var filteredData = [String]()
     
     
     @IBOutlet weak var btnsetting: UIBarButtonItem!
     
     @IBOutlet weak var collectionView: UICollectionView!
+    
+    @IBOutlet weak var searchBar: UISearchBar!
+    
+   
+    var data1 = [String]()
+    var filteredData = [String]()
+    var inSearchMode = false
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        filtered = movieList
+        self.searchController.searchResultsUpdater = self
+        self.searchController.delegate = self
+        self.searchController.searchBar.delegate = self
         
+        self.searchController.hidesNavigationBarDuringPresentation = false
+        self.searchController.dimsBackgroundDuringPresentation = true
+        self.searchController.obscuresBackgroundDuringPresentation = false
+        searchController.searchBar.placeholder = "Search for Movie"
+        searchController.searchBar.sizeToFit()
+        
+        
+        searchController.searchBar.becomeFirstResponder()
+        
+        
+        self.navigationItem.titleView = searchController.searchBar
         
         getServiceCall()
         
+    
+       
+        
     }
+    
+    
+    
+    
     
     func getServiceCall() {
         
@@ -40,6 +77,7 @@ class ViewController: UIViewController,UISearchBarDelegate,UIPopoverPresentation
             print(data)
             
             let result = data["results"].arrayValue
+            
             var dataIterator = 0
             for resultlist in result{
                 let title = resultlist["title"].stringValue
@@ -51,6 +89,8 @@ class ViewController: UIViewController,UISearchBarDelegate,UIPopoverPresentation
                 let originalTitle = resultlist["original_title"].stringValue
                 
                 self.movieList.insert(title, at: dataIterator)
+                
+               
                 self.movieBannar.insert(posterPath, at: dataIterator)
                 self.movieOverView.insert(overView, at: dataIterator)
                 self.movieRating.insert(rating, at: dataIterator)
@@ -74,13 +114,8 @@ class ViewController: UIViewController,UISearchBarDelegate,UIPopoverPresentation
     }
     
     @IBAction func btnSettingsTapped(_ sender: Any) {
-        
-        movieRating.sort { (first, second) -> Bool in
-            return first > second
-        }
-        UserDefaults.standard.set(movieRating, forKey: "sortArray")
-        self.collectionView.reloadData()
-        //performSegue(withIdentifier: "reusable", sender: self)
+      
+        performSegue(withIdentifier: "reusable", sender: self)
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?)
@@ -101,39 +136,84 @@ class ViewController: UIViewController,UISearchBarDelegate,UIPopoverPresentation
         return .none
     }
     
+    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
+        searchActive = false
+        self.dismiss(animated: true, completion: nil)
+    }
+    
+    func updateSearchResults(for searchController: UISearchController)
+    {
+        if let searchText = searchController.searchBar.text, !searchText.isEmpty {
+            filtered = movieList.filter { team in
+                return team.lowercased().contains(searchText.lowercased())
+            }
+            
+        } else {
+            filtered = movieList
+        }
+//        let searchString = searchController.searchBar.text
+//
+//        filtered = movieList.filter({ (item) -> Bool in
+//            let countryText: NSString = item as NSString
+//
+//            return (countryText.range(of: searchString!, options: NSString.CompareOptions.caseInsensitive).location) != NSNotFound
+//        })
+        
+        collectionView.reloadData()
+        
+    }
+    
+    func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
+        searchActive = true
+        collectionView.reloadData()
+    }
+    
     
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        if(!(searchBar.text?.isEmpty)!){
-            //reload your data source if necessary
-            
-        }
+        searchActive = false
+        collectionView.reloadData()
     }
     
-    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        if(searchText.isEmpty){
-            //reload your data source if necessary
-            filteredData = searchText.isEmpty ? movieList : movieList.filter({(dataString: String) -> Bool in
-                // If dataItem matches the searchText, return true to include it
-                return dataString.range(of: searchText, options: .caseInsensitive) != nil
-            })
+    func searchBarBookmarkButtonClicked(_ searchBar: UISearchBar) {
+        if !searchActive {
+            searchActive = true
+            collectionView.reloadData()
         }
+        
+        searchController.searchBar.resignFirstResponder()
+    }
+    
     }
 
 
-}
+
 
 extension ViewController:UICollectionViewDelegate,UICollectionViewDataSource,UICollectionViewDelegateFlowLayout{
+    
+
+    
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         
-           return movieList.count
+        if searchActive {
+            return filtered.count
+        }
+        else
+        {
+            return movieList.count
+        }
+
  
     }
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "cell", for: indexPath) as! Movielist
+         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "cell", for: indexPath) as! Movielist
+      
         cell.movieTitle.text = movieList[indexPath.row]
         cell.movieBanner.sd_setImage(with: URL(string: movieBannar[indexPath.row] ), placeholderImage: UIImage(named: "placeholder.png"))
+
         return cell
-    }
+        
+       }
+    
     
     func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
         if (kind == UICollectionElementKindSectionHeader) {
@@ -178,6 +258,12 @@ class Movielist: UICollectionViewCell {
  
     @IBOutlet weak var movieBanner: UIImageView!
     @IBOutlet weak var movieTitle: UILabel!
+    
+    func congigureCell(text: String) {
+        
+        movieTitle.text = text
+    }
+    
 }
 
 class SearchBarReusableView: UICollectionReusableView {
